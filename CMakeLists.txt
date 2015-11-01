@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(Tactics)
+project(tactics)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -28,7 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
 ##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
 ## * In the file package.xml:
 ##   * add a build_depend and a run_depend tag for each package in MSG_DEP_SET
-##   * If MSG_DEP_SET isn't empty the following dependencies might have been
+##   * If MSG_DEP_SET isn't empty the following dependencies might have beenac
 ##     pulled in transitively but can be declared for certainty nonetheless:
 ##     * add a build_depend tag for "message_generation"
 ##     * add a run_depend tag for "message_runtime"
@@ -80,7 +80,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES Tactics
+#  LIBRARIES tactics
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
@@ -97,19 +97,19 @@ include_directories(
 )
 
 ## Declare a cpp library
-# add_library(Tactics
-#   src/${PROJECT_NAME}/Tactics.cpp
+# add_library(tactics
+#   src/${PROJECT_NAME}/tactics.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(Tactics_node src/Tactics_node.cpp)
+# add_executable(tactics_node src/tactics_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(Tactics_node Tactics_generate_messages_cpp)
+# add_dependencies(tactics_node tactics_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(Tactics_node
+# target_link_libraries(tactics_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -128,7 +128,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS Tactics Tactics_node
+# install(TARGETS tactics tactics_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -153,7 +153,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_Tactics.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_tactics.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

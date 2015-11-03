@@ -8,6 +8,10 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   krssg_ssl_msgs
+  ssl_common
+  geometry_msgs
+  skills
+  # message_generation
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -45,8 +49,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Message1.msg
-#   Message2.msg
+#   TacticData.msg
+#   # Message1.msg
+#   # Message2.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -79,9 +84,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES tactics
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+ INCLUDE_DIRS include
+ LIBRARIES tactics
+ CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -160,8 +165,43 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-include_directories(include include/rapidjson)
+include_directories(include include/tactics ${catkin_INCLUDE_DIRS})
 
 
-add_executable(testing src/test.cpp)
-target_link_libraries(testing ${catkin_LIBRARIES})
+# add_executable(test_json src/test_json.cpp)
+# target_link_libraries(test_json ${catkin_LIBRARIES})
+
+# add_executable(test_json_sub src/test_json_sub.cpp)
+# target_link_libraries(test_json_sub ${catkin_LIBRARIES})
+
+
+# add_executable(pub src/test_custom_msg.cpp)
+# target_link_libraries(pub ${catkin_LIBRARIES})
+
+
+# add_executable(sub src/test_custom_msg_sub.cpp)
+# target_link_libraries(sub ${catkin_LIBRARIES})
+
+
+set (tacticsSrc
+  src/tPosition.cpp
+  src/tStop.cpp)
+
+
+set(src 
+    ${tacticsSrc}
+    src/tactic.cpp
+    src/tactic_factory.cpp)
+
+add_library(tactics ${src})
+target_link_libraries(tactics ${catkin_LIBRARIES})
+
+# for installilng the library so it can be used by other packages
+install(TARGETS tactics
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+
+# for installing the header files
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

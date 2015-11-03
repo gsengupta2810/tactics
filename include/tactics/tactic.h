@@ -4,16 +4,19 @@
 // #include <cstring>
 #include <string>
 #include <krssg_ssl_msgs/BeliefState.h>
+#include <krssg_ssl_msgs/gr_Robot_Command.h>
+
 
 using namespace std;
 using krssg_ssl_msgs::BeliefState;
+using krssg_ssl_msgs::gr_Robot_Command;
 namespace Strategy
 {
-  class TParam;
   class Tactic
   {
   public:
-    inline Tactic() {}
+    union Param;
+    inline Tactic(int botID):botID(botID) {}
     inline ~Tactic()
     {
     } // ~Tactic
@@ -26,24 +29,126 @@ namespace Strategy
      * assigned any role yet) depending on how suitable they are in being assigned
      * the tactic. It then chooses the bot with the highest score and assigns it the tactic.
      */
-    virtual int chooseBestBot(const BeliefState &bs, std::list<int>& freeBots, const TParam& tParam, int prevID = -1) const = 0;
+    virtual int chooseBestBot(const BeliefState &bs, std::list<int>& freeBots, const Tactic::Param& tParam, int prevID = -1) const = 0;
     /* This function takes in the current tactic parameter for a robot and
      * using the belief state info and the skill transition rules,
      * it either decides to transit to another skill or continues to run
      * the current skill.
      */
-    virtual void execute(const TParam& tParam) = 0;
-   
-  
+    virtual gr_Robot_Command execute(const BeliefState &state, const Param& tParam) = 0;
+    union Param
+    {
+      /* Union of parameters for each tactic enumerated in Tactic::ID
+       * Creating object initializes each member by default to zero
+       */
+       
+      // Parameters for tactic Goalie
+      struct GoalieP
+      { } GoalieP;
+
+      // Parameters for tactic Clear
+      struct ClearP
+      { } ClearP;
+
+      // Parameters for the tactic Block
+      struct BlockP
+      {
+        float dist;   // Distance from the goal where the bot has to defend the goal
+        int side;
+      } BlockP;
+      struct DefendLineP
+      {
+        int x1, x2, y1, y2;
+    int radius;
+      } DefendLineP;
+    
+      struct PositionP
+      {
+        float x ;
+        float y ;
+        float finalSlope ;
+        float finalVelocity ;
+        bool align;
+      } PositionP , PositionForStartP, PositionForPenaltyP;
+
+      // Parameters for the tactic Stop
+      struct StopP
+      { } StopP;
+
+      // Parameters for the tactic Velocity
+    
+      struct VelocityP
+      {
+        float v_x;
+        float v_y;
+        float v_t;
+      } VelocityP;
+
+      // Parameters for the tactic Kick
+      struct KickP
+      {
+        float power;  // >= 0.0 and <= 1.0
+      } KickP;
+    
+    struct DefendPointP
+      {
+        int x, y;
+    int radius;
+      } DefendPointP;
+    
+    struct DefendP
+      {
+        int x;
+      } DefendP;
+    
+    struct MarkBotP
+      {
+        int awayBotID ;
+      } MarkBotP;
+      
+      struct PassP
+      {
+        float power;
+        float x;
+        float y;
+      } PassP;
+      
+      Param() {
+        /** Create a Parameter Object for Tactics
+         * Initializes all the members initially to zero by default
+         */
+        memset(this, 0, sizeof(Param) );
+      }
+      // Param(Tactic::ID tacticID) {
+      //   /** Create a Parameter Object for Tactics
+      //    * Initializes all the members initially to zero by default
+      //    */
+      //   memset(this, 0, sizeof(Param) );
+      //   switch(tacticID) {
+      //     case Tactic::Block:
+      //       this->BlockP.dist = 100;
+      //       this->BlockP.side = 1;
+      //       break;
+      //     default:
+      //       break;
+      //   }
+      // }
+    };
+    // again, need virtual static functions for each tactic that can parse JSON strings to create Tactic::Param objects, 
+    // and vice versa. However can't make these both virtual and static
+    virtual Param paramFromJSON(string json) = 0;
+    virtual string paramToJSON(Param p) = 0;
+  protected:
+    int botID;
   }; // class Tactic
 
-  // base class for tactic param.
-  class TParam {
-  public:
-    // function to initialize param from json string
-    virtual void fromJSON(string json) = 0;
-    // function that returns a string with has its params in JSON format
-    virtual string toJSON() = 0;
-  };
+  // // base class for tactic param.
+  // class TParam {
+  // public:
+  //   // function to initialize param from json string
+  //   virtual void fromJSON(string json) = 0;
+  //   // function that returns a string with has its params in JSON format
+  //   virtual string toJSON() = 0;
+  // };
 } // namespace Strategy
 #endif // TACTIC_H

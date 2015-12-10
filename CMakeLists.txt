@@ -185,7 +185,8 @@ include_directories(include include/tactics ${catkin_INCLUDE_DIRS})
 
 set (tacticsSrc
   src/tPosition.cpp
-  src/tStop.cpp)
+  src/tStop.cpp
+  src/tKickToGoal.cpp)
 
 
 set(src 

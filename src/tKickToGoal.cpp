@@ -5,6 +5,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include <iostream>
+#include <vector>
 #include <stdio.h>
 #include <ssl_common/geometry.hpp>
 #include <skills/skillSet.h>
@@ -133,7 +134,7 @@ namespace Strategy
 //        printf("going to ball %d, %f, %f\n", BOT_BALL_THRESH, dist, angleWithBall);
         return SkillSet::instance()->executeSkill(sID, sParam, state, botID);
       }
-      if((fabs(turnAngleLeft) > SATISFIABLE_THETA/2))
+      if((fabs(turnAngleLeft) > SATISFIABLE_THETA/3))
       {
 //        printf("turning to balll %f %f\n", turnAngleLeft, angleWithBall);
         sID = SkillSet::TurnToPoint;

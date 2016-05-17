@@ -35,7 +35,7 @@ namespace Strategy
       return minv;
     } // chooseBestBot
 
-    gr_Robot_Command TStop::execute(const BeliefState &state, const Param& tParam)
+    gr_Robot_Command TStop::execute(const BeliefState &state,const Param& tParam)
     {
       Strategy::SkillSet::SkillID sID = SkillSet::Stop;
       SkillSet::SParam sParam;

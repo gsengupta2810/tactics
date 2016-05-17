@@ -58,8 +58,8 @@ namespace Strategy
       } BlockP;
       struct DefendLineP
       {
-        int x1, x2, y1, y2;
-    int radius;
+        float x1, x2, y1, y2;
+        float radius;
       } DefendLineP;
     
       struct PositionP

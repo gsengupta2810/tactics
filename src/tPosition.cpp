@@ -11,8 +11,7 @@
 namespace Strategy
 {
 
-    TPosition::TPosition(int botID) :
-      Tactic(botID)
+    TPosition::TPosition(int botID) :Tactic(botID)
     {
 
     } // TPosition
@@ -40,7 +39,7 @@ namespace Strategy
         Vector2D<int> homePos(state.homePos[*it].x, state.homePos[*it].y);
         float dis_from_point = (homePos - tGoToPoint).absSq();
         if(*it == prevID)
-          dis_from_point -= HYSTERESIS;
+          dis_from_point -= HYSTERESIS + 0.1;
         if(dis_from_point < mindis)
         {
           mindis = dis_from_point;
@@ -54,7 +53,7 @@ namespace Strategy
     gr_Robot_Command TPosition::execute(const BeliefState &state, const Param& tParam)
     {
       // Select the skill to the executed next
-//      printf("botpos x:%d\ty:%d\n", state->homePos[botID].x, state->homePos[botID].y);
+      // printf("botpos x:%d\ty:%d\n", state->homePos[botID].x, state->homePos[botID].y);
 
       Strategy::SkillSet::SkillID sID = SkillSet::GoToPoint;
       SkillSet::SParam sParam;
@@ -64,7 +63,7 @@ namespace Strategy
       sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope ;
       sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
 
-      // Execute the selected skill
+      // Execute the selected skill   
       Strategy::SkillSet *ptr = SkillSet::instance();
       return ptr->executeSkill(sID, sParam, state, botID);
 

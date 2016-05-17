@@ -9,6 +9,7 @@
 #include "tactic_factory.h"
 namespace Strategy
 {
+  //## each of the tactics is represented as a class and is and is derived from the abstract Tactic class
   class TPosition: public Tactic
   {
   public:
@@ -25,7 +26,7 @@ namespace Strategy
     virtual int chooseBestBot(const BeliefState &bs, std::list<int>& freeBots, const Param& tParam, int prevID = -1) const;
    
 
-    virtual gr_Robot_Command execute(const BeliefState &state, const Param& tParam);
+    virtual gr_Robot_Command execute(const BeliefState &state,const Param& tParam);
 
     virtual Tactic::Param paramFromJSON(string json);
     virtual string paramToJSON(Tactic::Param p);

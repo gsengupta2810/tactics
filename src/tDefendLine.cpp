@@ -7,7 +7,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
-#include <fstream>
 #include <ssl_common/geometry.hpp>
 #include <skills/skillSet.h>
 
@@ -63,14 +62,13 @@ namespace Strategy
 		Vector2D<float> homePos(state.homePos[botID].x, state.homePos[botID].y);
         Vector2D<float> ballPos(state.ballPos.x, state.ballPos.y);
 
-        //calculate the distance of the nearest bot from the line
         float slope;
         float Angle_turn;
         float finalSlope;
         float angle;
         float dis_of_ball;
-        float dis;
-        static int flag = 0;//this represents that the bot is supposed to turn before the kick skill is executed
+        float dis_of_bot;
+        float dis_bot_ball;
 
         //calculate slope of the line
         if(abs(P2.x - P1.x) < pow(10, -2)){
@@ -93,12 +91,29 @@ namespace Strategy
         P2.y = HALF_FIELD_MAXY / 2.0;
 
         //decide the internal state of the bot
+        dis_of_bot  = getDistanceFromLine(tParam, state, homePos.x, homePos.y);
+        dis_of_ball = getDistanceFromLine(tParam, state, ballPos.x, ballPos.y);
+        dis_bot_ball = Vector2D<float>::dist(ballPos, homePos);
+
+        if(dis_of_bot > BOT_POINT_THRESH * 1.1){
+            iState = GO_TO_LINE;
+        }
+        else if(Vector2D<float>::dist(ballPos, homePos) > BOT_BALL_THRESH * 5){
+            iState = OSCILLATE;
+        }
+        else if(dis_bot_ball >= DRIBBLER_BALL_THRESH){
+            iState = GO_TO_BALL;
+        }
+        else{
+            iState = TURN_TO_POINT;
+        }
 
         /*
         If the perpendicular distance between the bot and the line is greater than threshold
         go towards the line
         Maybe midpoint??
         */
+
         static  int count = 0;
 
         switch(iState){
@@ -111,20 +126,6 @@ namespace Strategy
                     sParam.GoToPointP.align         = tParam.PositionP.align;
                     sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope;
                     sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
-
-                    dis = getDistanceFromLine(tParam, state, homePos.x, homePos.y);
-                    if(dis > BOT_POINT_THRESH * 1.1){
-                        iState = GO_TO_LINE;
-                    }
-                    else if((homePos - ballPos).absSq() > pow(BOT_BALL_THRESH * 2, 2)){
-                        iState = OSCILLATE;
-                    }
-                    else if(dis_of_ball < BOT_POINT_THRESH * 3.2 && dis_of_ball > BOT_POINT_THRESH){
-                        iState = GO_TO_BALL;
-                    }
-                    else{
-                        iState = TURN_TO_POINT;
-                    }
 
             break;
             case OSCILLATE:
@@ -154,43 +155,20 @@ namespace Strategy
                         sParam.GoToPointP.y = P2.y - (count - 3 * 15 * MUL_FACTOR) * ((P2.y - mid.y) / (15 * MUL_FACTOR));
                     }
                  count++;
-                 dis_of_ball = getDistanceFromLine(tParam, state, ballPos.x, ballPos.y);
-
-                 if((homePos - ballPos).absSq() > pow(BOT_BALL_THRESH * 2, 2)){
-                    iState = OSCILLATE;
-                 }
-                 else if(dis_of_ball < BOT_POINT_THRESH * 3.2 && dis_of_ball > BOT_POINT_THRESH){
-                    iState = GO_TO_BALL;
-                 }
-                 else{
-                        iState = TURN_TO_POINT;
-                 }
-
+                 
             break;
             case GO_TO_BALL:
-                     sID = SkillSet::GoToPoint;
+                     sID = SkillSet::GoToBall;
 
-                      sParam.GoToPointP.x             = state.ballPos.x;
-                      sParam.GoToPointP.y             = state.ballPos.y;
-                      sParam.GoToPointP.align         = tParam.PositionP.align;
-                      sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope;
-                      sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
-
-                     // if(dis_of_ball < BOT_POINT_THRESH * 3.2 && dis_of_ball > BOT_POINT_THRESH ){
-                       // iState = GO_TO_BALL;
-                      //}
-                      //else{
-                        iState = TURN_TO_POINT;
-                      //}
             break;
             case TURN_TO_POINT:
                     finalSlope = Vector2D<float>::angle(ballPos, homePos);
                     Angle_turn = normalizeAngle(finalSlope - state.homePos[botID].theta);   
 
-                  if(Angle_turn <= PI / 5){
+                  if(Angle_turn <= PI / 5 || Angle_turn >= -1 * PI / 5){
                     sID = SkillSet::Kick;
 
-                    sParam.KickP.power = 7;
+                    sParam.KickP.power = 7.0f;
                   }
                   else{
                       sID = SkillSet::TurnToPoint;

@@ -24,12 +24,20 @@ namespace Strategy
 		virtual Tactic::Param paramFromJSON(string json);
 		virtual string paramToJSON(Tactic::Param p);
 
-		//some local functions
-		float getDistanceFromLine(const Param& tParam, const BeliefState& state, int idx) const;
+		/* some local functions */
+		//gives the distance of a line from the point (x0, y0)
+		float getDistanceFromLine(const Param& tParam, const BeliefState& state, float x0, float y0) const;
 
 	private:
 		//MUL_FACTOR of 1 equals 60 frames per oscillation along the line
 		static const int MUL_FACTOR = 2;
+		enum InternalState{
+			GO_TO_LINE,
+			OSCILLATE,
+			GO_TO_BALL,
+			TURN_TO_POINT,
+			KICK
+		}iState;
 
 	};//class TDefendLine
     //registering the tactic class in the factory

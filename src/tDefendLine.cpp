@@ -11,13 +11,13 @@
 #include <ssl_common/geometry.hpp>
 #include <skills/skillSet.h>
 
+
 namespace Strategy
 {
-	TDefendLine::TDefendLine(int botID) : Tactic(botID) {}
-	TDefendLine::~TDefendLine()
-	{
-
-	}
+	TDefendLine::TDefendLine(int botID) : Tactic(botID) {
+        iState = GO_TO_LINE;
+    }
+	TDefendLine::~TDefendLine() {}
 
 	bool TDefendLine::isCompleted(const BeliefState &bs) const {
 		return false;
@@ -32,14 +32,14 @@ namespace Strategy
 		int SelectedBot;
 		float MinDis = 100000000.0f;
 
-		Vector2D<int> P1(tParam.DefendLineP.x1, tParam.DefendLineP.y1);
-		Vector2D<int> P2(tParam.DefendLineP.x2, tParam.DefendLineP.y2);
+		Vector2D<float> P1(tParam.DefendLineP.x1, tParam.DefendLineP.y1);
+		Vector2D<float> P2(tParam.DefendLineP.x2, tParam.DefendLineP.y2);
 		//calculate the midpoint of the line segment
-		Vector2D<int> mid((P1.x + P2.x)/2,(P1.y + P2.y)/2);
+		Vector2D<float> mid((P1.x + P2.x)/2,(P1.y + P2.y)/2);
 
 		for(std::list<int>::iterator itr = freeBots.begin(); itr != freeBots.end(); ++itr) {
 
-			float dist = getDistanceFromLine(tParam, state, *itr);
+			float dist = getDistanceFromLine(tParam, state, state.homePos[*itr].x, state.homePos[*itr].y);
 
 			if(dist < MinDis){
 				MinDis = dist;
@@ -64,13 +64,35 @@ namespace Strategy
         Vector2D<float> ballPos(state.ballPos.x, state.ballPos.y);
 
         //calculate the distance of the nearest bot from the line
-        float dis = getDistanceFromLine(tParam, state, botID);
+        float slope;
+        float Angle_turn;
+        float finalSlope;
+        float angle;
+        float dis_of_ball;
+        float dis;
+        static int flag = 0;//this represents that the bot is supposed to turn before the kick skill is executed
+
+        //calculate slope of the line
+        if(abs(P2.x - P1.x) < pow(10, -2)){
+        	slope = INF;
+        	angle = PI / 2; 
+        }
+        else if(abs(P2.y - P1.y) < pow(10, -2)){
+        	slope = 0.0f;
+        	angle = 0.0f;
+        }
+        else{
+        	slope = (P2.y - P1.y)/(P2.x - P1.x);
+        	angle = atan(slope);
+        }
 
         //just for testing the tactic
         P1.x = 0.0f;
         P1.y = 0.0f;
-        P2.x = HALF_FIELD_MAXX - BOT_POINT_THRESH;
-        P2.y = HALF_FIELD_MAXY - BOT_POINT_THRESH;
+        P2.x = HALF_FIELD_MAXX / 2.0;
+        P2.y = HALF_FIELD_MAXY / 2.0;
+
+        //decide the internal state of the bot
 
         /*
         If the perpendicular distance between the bot and the line is greater than threshold
@@ -78,61 +100,114 @@ namespace Strategy
         Maybe midpoint??
         */
         static  int count = 0;
-        if(dis > BOT_POINT_THRESH * 1.1) {
-        	sID = SkillSet::GoToPoint;
 
-        	sParam.GoToPointP.x             = mid.x;
-        	sParam.GoToPointP.y             = mid.y;
-        	sParam.GoToPointP.align         = tParam.PositionP.align;
-        	sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope ;
-            sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
-        }
+        switch(iState){
+            case GO_TO_LINE:
 
-        /*
-        Move along the line and guard it
-        Dividing sixty frames into four equal parts and executing the GoToPoint skill
-        */
-     
-        else if((homePos - ballPos).absSq() > BOT_BALL_THRESH * BOT_BALL_THRESH * 1.1 * 1.1) {
+                    sID = SkillSet::GoToPoint;
 
-        	sID = SkillSet::GoToPoint;
+                    sParam.GoToPointP.x             = mid.x;
+                    sParam.GoToPointP.y             = mid.y;
+                    sParam.GoToPointP.align         = tParam.PositionP.align;
+                    sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope;
+                    sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
 
-        	sParam.GoToPointP.align         = tParam.PositionP.align;
-        	sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope ;
-            sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
+                    dis = getDistanceFromLine(tParam, state, homePos.x, homePos.y);
+                    if(dis > BOT_POINT_THRESH * 1.1){
+                        iState = GO_TO_LINE;
+                    }
+                    else if((homePos - ballPos).absSq() > pow(BOT_BALL_THRESH * 2, 2)){
+                        iState = OSCILLATE;
+                    }
+                    else if(dis_of_ball < BOT_POINT_THRESH * 3.2 && dis_of_ball > BOT_POINT_THRESH){
+                        iState = GO_TO_BALL;
+                    }
+                    else{
+                        iState = TURN_TO_POINT;
+                    }
 
-            if(count > 60 * MUL_FACTOR)
-            	count = 0;
+            break;
+            case OSCILLATE:
+                    sID = SkillSet::GoToPoint;
 
-        	if(count <= 15 * MUL_FACTOR){
-        		sParam.GoToPointP.x = mid.x + count * ((P1.x - mid.x) / (15 * MUL_FACTOR)) ;
-        	    sParam.GoToPointP.y = mid.y + count * ((P1.y - mid.y) / (15 * MUL_FACTOR));
-        	}
-        	else if((count > 15 * MUL_FACTOR) && (count <= 30 * MUL_FACTOR)){
-        		sParam.GoToPointP.x = P1.x - (count - 1 * 15 * MUL_FACTOR) * ((P1.x - mid.x) / (15 * MUL_FACTOR));
-        	    sParam.GoToPointP.y = P1.y - (count - 1 * 15 * MUL_FACTOR) * ((P1.y - mid.y) / (15 * MUL_FACTOR));
-        	}
-        	else if((count > 30 * MUL_FACTOR) && (count <= 45 * MUL_FACTOR)){
-        		sParam.GoToPointP.x = mid.x + (count - 2 * 15 * MUL_FACTOR) * ((P2.x - mid.x) / (15 * MUL_FACTOR));
-        	    sParam.GoToPointP.y = mid.y + (count - 2 * 15 * MUL_FACTOR) * ((P2.y - mid.y) / (15 * MUL_FACTOR));
-        	}
-        	else{
-        		sParam.GoToPointP.x = P2.x - (count - 3 * 15 * MUL_FACTOR) * ((P2.x - mid.x) / (15 * MUL_FACTOR));
-        	    sParam.GoToPointP.y = P2.y - (count - 3 * 15 * MUL_FACTOR) * ((P2.y - mid.y) / (15 * MUL_FACTOR));
-        	}
-        	count++;
-        }
-       
-        /*
-        Now that the ball is close enough towards the line spin and deflect the ball off 
-        from the line
-        */
+                    sParam.GoToPointP.align         = tParam.PositionP.align;
+                    sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope;
+                    sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
 
-        else {
-        	sID = SkillSet::Spin;
-        	sParam.SpinP.radPerSec = MAX_BOT_OMEGA;
+                    if(count > 60 * MUL_FACTOR)
+                        count = 0;
+
+                    if(count <= 15 * MUL_FACTOR){
+                        sParam.GoToPointP.x = mid.x + count * ((P1.x - mid.x) / (15 * MUL_FACTOR)) ;
+                        sParam.GoToPointP.y = mid.y + count * ((P1.y - mid.y) / (15 * MUL_FACTOR));
+                    }
+                    else if((count > 15 * MUL_FACTOR) && (count <= 30 * MUL_FACTOR)){
+                        sParam.GoToPointP.x = P1.x - (count - 1 * 15 * MUL_FACTOR) * ((P1.x - mid.x) / (15 * MUL_FACTOR));
+                        sParam.GoToPointP.y = P1.y - (count - 1 * 15 * MUL_FACTOR) * ((P1.y - mid.y) / (15 * MUL_FACTOR));
+                    }
+                    else if((count > 30 * MUL_FACTOR) && (count <= 45 * MUL_FACTOR)){
+                        sParam.GoToPointP.x = mid.x + (count - 2 * 15 * MUL_FACTOR) * ((P2.x - mid.x) / (15 * MUL_FACTOR));
+                        sParam.GoToPointP.y = mid.y + (count - 2 * 15 * MUL_FACTOR) * ((P2.y - mid.y) / (15 * MUL_FACTOR));
+                    }
+                    else{
+                        sParam.GoToPointP.x = P2.x - (count - 3 * 15 * MUL_FACTOR) * ((P2.x - mid.x) / (15 * MUL_FACTOR));
+                        sParam.GoToPointP.y = P2.y - (count - 3 * 15 * MUL_FACTOR) * ((P2.y - mid.y) / (15 * MUL_FACTOR));
+                    }
+                 count++;
+                 dis_of_ball = getDistanceFromLine(tParam, state, ballPos.x, ballPos.y);
+
+                 if((homePos - ballPos).absSq() > pow(BOT_BALL_THRESH * 2, 2)){
+                    iState = OSCILLATE;
+                 }
+                 else if(dis_of_ball < BOT_POINT_THRESH * 3.2 && dis_of_ball > BOT_POINT_THRESH){
+                    iState = GO_TO_BALL;
+                 }
+                 else{
+                        iState = TURN_TO_POINT;
+                 }
+
+            break;
+            case GO_TO_BALL:
+                     sID = SkillSet::GoToPoint;
+
+                      sParam.GoToPointP.x             = state.ballPos.x;
+                      sParam.GoToPointP.y             = state.ballPos.y;
+                      sParam.GoToPointP.align         = tParam.PositionP.align;
+                      sParam.GoToPointP.finalslope    = tParam.PositionP.finalSlope;
+                      sParam.GoToPointP.finalVelocity = tParam.PositionP.finalVelocity;
+
+                     // if(dis_of_ball < BOT_POINT_THRESH * 3.2 && dis_of_ball > BOT_POINT_THRESH ){
+                       // iState = GO_TO_BALL;
+                      //}
+                      //else{
+                        iState = TURN_TO_POINT;
+                      //}
+            break;
+            case TURN_TO_POINT:
+                    finalSlope = Vector2D<float>::angle(ballPos, homePos);
+                    Angle_turn = normalizeAngle(finalSlope - state.homePos[botID].theta);   
+
+                  if(Angle_turn <= PI / 5){
+                    sID = SkillSet::Kick;
+
+                    sParam.KickP.power = 7;
+                  }
+                  else{
+                      sID = SkillSet::TurnToPoint;
+
+                      sParam.TurnToPointP.x         = state.ballPos.x;
+                      sParam.TurnToPointP.y         = state.ballPos.y;
+                      sParam.TurnToPointP.max_omega = MAX_BOT_OMEGA;
+                  }
+            break;
+            case KICK:
+            /*
+                   this is handled in TURN_TO_POINT iState 
+            */
+            break;
         }
         return SkillSet::instance()->executeSkill(sID, sParam, state, botID);
+
 	}//execute function
 
 
@@ -173,16 +248,11 @@ namespace Strategy
 	}//paramToJSON
 
 
-	float TDefendLine::getDistanceFromLine(const Param& tParam, const BeliefState& state, int idx) const{
+	float TDefendLine::getDistanceFromLine(const Param& tParam, const BeliefState& state, float x0, float y0) const{
 
 		Vector2D<float> P1(tParam.DefendLineP.x1, tParam.DefendLineP.y1);
 		Vector2D<float> P2(tParam.DefendLineP.x2, tParam.DefendLineP.y2);
-		Vector2D<float> mid(float((P1.x + P2.x)/2.0),float((P1.y + P2.y)/2.0));
-		Vector2D<float> homePos(state.homePos[idx].x, state.homePos[idx].y);
-        Vector2D<float> ballPos(state.ballPos.x, state.ballPos.y);
 
-        float x0 = state.homePos[idx].x;
-        float y0 = state.homePos[idx].y;
         float x1 = P1.x;
         float x2 = P2.x;
         float y1 = P1.y;

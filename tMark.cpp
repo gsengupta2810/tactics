@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <ssl_common/geometry.hpp>
 
-#include <fstream>
 
 #define KICK_RANGE_THRESH MAX_DRIBBLE_R
 #define THRES (0.8f)
@@ -40,18 +39,6 @@ namespace Strategy{
 	}
 
 	gr_Robot_Command TMark::execute(const BeliefState &state, const Tactic::Param& tParam){
-
-
-
-
-		fstream myfile;
-
-		myfile.open ("/home/rishit/Desktop/mark.txt" , fstream::app);
-		
-		
-
-
-
 
 
 		Vector2D<int> ballAim, marked, guardPos;
@@ -122,7 +109,6 @@ namespace Strategy{
 			sParam.TurnToPointP.x = guardPos.x;
 			sParam.TurnToPointP.y = guardPos.y;
 			sParam.TurnToPointP.max_omega = 5 * MAX_BOT_OMEGA;
-			myfile << "tryna turn" << endl;
 			return SkillSet::instance()->executeSkill(sID, sParam, state, botID);
 		}
 

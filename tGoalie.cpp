@@ -43,14 +43,6 @@ namespace Strategy{
 
 	gr_Robot_Command TGoalie::execute(const BeliefState &state, const Tactic::Param& tParam){
 
-		fstream myfile;
-
-		myfile.open ("/home/rishit/Desktop/LOG.txt" , fstream::app);
-		
-		myfile << "\n ------------------------------------------------------- \n";
-		
-
-
 		Vector2D<int> ballAim, goalieTarget;
 		Vector2D<int> botpos (state.homePos[botID].x, state.homePos[botID].y);
 		Vector2D<int> ballPos(state.ballPos.x, state.ballPos.y);
@@ -69,11 +61,11 @@ namespace Strategy{
 					sID = SkillSet::TurnToAngle;
 					sParam.TurnToAngleP.x = state.ballPos.x;
 					sParam.TurnToAngleP.y = state.ballPos.y;
-					sParam.TurnToAngleP.radius = 0;	myfile << " ballPos: ( " << state.ballPos.x << " " << state.ballPos.y << " )\tBotangle: " << state.homePos[botID].theta << " \n TurnToPoint executed" ; 
+					sParam.TurnToAngleP.radius = 0;	
 					return SkillSet::instance()->executeSkill(sID, sParam, state, botID);
 				}
 				else */if( dist >= DRIBBLER_BALL_THRESH){
-					sID = SkillSet::GoToBall;						myfile << " ballPos: ( " << state.ballPos.x << " " << state.ballPos.y << " ) \n GoToBall executed" ; 
+					sID = SkillSet::GoToBall;						
 					return SkillSet::instance()->executeSkill(sID, sParam, state, botID);	 
 				}
 				else{
@@ -81,17 +73,17 @@ namespace Strategy{
 					sParam.DribbleToPointP.x = state.homePos[botID].x;
 					sParam.DribbleToPointP.y = state.homePos[botID].y;
 					sParam.DribbleToPointP.finalslope = 0;
-					sParam.DribbleToPointP.radius = 0;					myfile << "trying to pull" << endl;
+					sParam.DribbleToPointP.radius = 0;				
 					return SkillSet::instance()->executeSkill(sID,sParam,state,botID);
 				}
 			}
 			else if( dist >= DRIBBLER_BALL_THRESH){
-				sID = SkillSet::GoToBall;						myfile << " ballPos: ( " << state.ballPos.x << " " << state.ballPos.y << " ) \n GoToBall executed" ; 
+				sID = SkillSet::GoToBall;					
 				return SkillSet::instance()->executeSkill(sID, sParam, state, botID);	 
 			}
 			else{
 				sID = SkillSet::Kick;
-				sParam.KickP.power = 7.0f;							myfile << " ballPos: ( " << state.ballPos.x << " " << state.ballPos.y << " ) \n Kick executed" ; 
+				sParam.KickP.power = 7.0f;						
 				return SkillSet::instance()->executeSkill(sID, sParam, state, botID);    	
 			}
 
@@ -114,7 +106,7 @@ namespace Strategy{
 			float kick_range_test = (oppPos - ballPos).absSq();
 
 			if(kick_range_test < KICK_RANGE_THRESH && kick_range_test < striker_dist){
-				striker = oppID;
+				striker = oppID;m
 				striker_dist = kick_range_test;
 			}
 		}
@@ -149,15 +141,15 @@ namespace Strategy{
 
 
 		sID = SkillSet::GoToPoint;
-		sParam.GoToPointP.x = goalieTarget.x;													myfile << "\tx=" << goalieTarget.x << endl;
+		sParam.GoToPointP.x = goalieTarget.x;												
 
-		sParam.GoToPointP.y = goalieTarget.y;													myfile << "\ty=" << goalieTarget.y << endl;
+		sParam.GoToPointP.y = goalieTarget.y;												
 	 	
-	 	sParam.GoToPointP.finalVelocity = 0;													myfile << "\tvel = 0" << endl;
+	 	sParam.GoToPointP.finalVelocity = 0;												
 	 	
-	 	sParam.GoToPointP.finalslope = atan2( (state.ballPos.y - state.homePos[botID].y) , (state.ballPos.x - state.homePos[botID].x));		myfile << "\tslope = sParam.GoToPointP.finalslope" << endl;
+	 	sParam.GoToPointP.finalslope = atan2( (state.ballPos.y - state.homePos[botID].y) , (state.ballPos.x - state.homePos[botID].x));	
 	 																
-	 																		myfile << "GoToPoint executed" << endl;
+	 																	
 
 	 	return SkillSet::instance()->executeSkill(sID, sParam, state, botID);							
 
